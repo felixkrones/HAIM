@@ -111,10 +111,10 @@ from transformers import AutoTokenizer, AutoModel, logging
 logging.set_verbosity_error()
 # biobert_path = '../pretrained_models/bio_clinical_bert/biobert_pretrain_output_all_notes_150000/'
 biobert_path = 'pretrained_bert_tf/biobert_pretrain_output_all_notes_150000/'
-# biobert_tokenizer = AutoTokenizer.from_pretrained(biobert_path)
-# biobert_model = AutoModel.from_pretrained(biobert_path)
-biobert_tokenizer = AutoTokenizer.from_pretrained("emilyalsentzer/Bio_ClinicalBERT")
-biobert_model = AutoModel.from_pretrained("emilyalsentzer/Bio_ClinicalBERT")
+biobert_tokenizer = AutoTokenizer.from_pretrained(biobert_path)
+biobert_model = AutoModel.from_pretrained(biobert_path)
+# biobert_tokenizer = AutoTokenizer.from_pretrained("emilyalsentzer/Bio_ClinicalBERT")
+# biobert_model = AutoModel.from_pretrained("emilyalsentzer/Bio_ClinicalBERT")
 # os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Computer Vision
@@ -201,18 +201,7 @@ class Patient_ICU(object):
 
 
 # GET FULL MIMIC IV PATIENT RECORD USING DATABASE KEYS
-def get_patient_icustay(key_subject_id, key_hadm_id, key_stay_id,
-                        df_base_core, df_admissions, df_patients, df_transfers,
-                        df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail,
-                        df_hcpcsevents, df_labevents, df_microbiologyevents, 
-                        df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services,
-                        df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitems,
-                        df_procedureevents, df_outputevents, df_inputevents, df_icustays,
-                        df_datetimeevents, df_chartevents, df_d_items,
-                        df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes):
-
+def get_patient_icustay(key_subject_id, key_hadm_id, key_stay_id):
     # Inputs:
     #   key_subject_id -> subject_id is unique to a patient
     #   key_hadm_id    -> hadm_id is unique to a patient hospital stay
@@ -1730,7 +1719,7 @@ def load_patient_object(filepath):
 
     
 # BUILD DATAFRAME OF IMAGES AND NOTES FOR MIMIC-IV CXR
-def build_mimic_cxr_jpg_dataframe(core_mimiciv_imgcxr_path, do_save=True):
+def build_mimic_cxr_jpg_dataframe(core_mimiciv_imgcxr_path, do_save=False):
     # Inputs:
     #   core_mimiciv_imgcxr_path -> Directory of CXR images and image notes
     #   do_save -> Flag to save dataframe
@@ -1775,13 +1764,13 @@ def build_mimic_cxr_jpg_dataframe(core_mimiciv_imgcxr_path, do_save=True):
         
     #Save
     if do_save:
-        df_mimic_cxr_jpg.to_csv(core_mimiciv_imgcxr_path + '/mimic-cxr-2.0.0-jpeg-txt.csv')
+        df_mimic_cxr_jpg.to_csv(core_mimiciv_path + 'mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-jpeg-txt.csv')
         
     return df_mimic_cxr_jpg
 
 
 # LOAD ALL MIMIC IV TABLES IN MEMORY (warning: High memory lengthy process)
-def load_mimiciv(core_mimiciv_path, core_mimiciv_imgcxr_path, output_path):
+def load_mimiciv(core_mimiciv_path):
     # Inputs:
     #   core_mimiciv_path -> Path to structured MIMIC IV databases in CSV files
     #   filename -> Pickle filename to save object to
@@ -1793,30 +1782,22 @@ def load_mimiciv(core_mimiciv_path, core_mimiciv_imgcxr_path, output_path):
     ###    Resources to identify tables and variables of interest can be found in the MIMIC-IV official API (https://mimic-iv.mit.edu/docs/)
     
     ## CORE
-    print('Loading core tables...')
-    df_admissions = dd.read_csv(core_mimiciv_path + 'hosp/admissions.csv.gz', assume_missing=True, dtype={'admission_location': 'object','deathtime': 'object','edouttime': 'object','edregtime': 'object'})
-    df_patients = dd.read_csv(core_mimiciv_path + 'hosp/patients.csv.gz', assume_missing=True, dtype={'dod': 'object'})  
-    df_transfers = dd.read_csv(core_mimiciv_path + 'hosp/transfers.csv', assume_missing=True, dtype={'careunit': 'object'})
+    df_admissions = dd.read_csv(core_mimiciv_path + 'core/admissions.csv', assume_missing=True, dtype={'admission_location': 'object','deathtime': 'object','edouttime': 'object','edregtime': 'object'})
+    df_patients = dd.read_csv(core_mimiciv_path + 'core/patients.csv', assume_missing=True, dtype={'dod': 'object'})  
+    df_transfers = dd.read_csv(core_mimiciv_path + 'core/transfers.csv', assume_missing=True, dtype={'careunit': 'object'})
   
     ## HOSP
-    print('Loading hospital tables...')
-    df_d_labitems = dd.read_csv(core_mimiciv_path + 'hosp/d_labitems.csv.gz', assume_missing=True, dtype={'loinc_code': 'object'})
-    df_d_icd_procedures = dd.read_csv(core_mimiciv_path + 'hosp/d_icd_procedures.csv.gz', assume_missing=True, dtype={'icd_code': 'object', 'icd_version': 'object'})
-    df_d_icd_diagnoses = dd.read_csv(core_mimiciv_path + 'hosp/d_icd_diagnoses.csv.gz', assume_missing=True, dtype={'icd_code': 'object', 'icd_version': 'object'})
-    df_d_hcpcs = dd.read_csv(core_mimiciv_path + 'hosp/d_hcpcs.csv.gz', assume_missing=True,
-                         dtype={
-                             'code': 'object',
-                             'category': 'float64',
-                             'long_description': 'object',
-                             'short_description': 'object'
-                         })
-    df_diagnoses_icd = dd.read_csv(core_mimiciv_path + 'hosp/diagnoses_icd.csv.gz', assume_missing=True, dtype={'icd_code': 'object', 'icd_version': 'object'})
-    df_drgcodes = dd.read_csv(core_mimiciv_path + 'hosp/drgcodes.csv.gz', assume_missing=True)
-    df_emar = dd.read_csv(core_mimiciv_path + 'hosp/emar.csv.gz', assume_missing=True)
-    df_emar_detail = dd.read_csv(core_mimiciv_path + 'hosp/emar_detail.csv.gz', assume_missing=True, low_memory=False, dtype={'completion_interval': 'object','dose_due': 'object','dose_given': 'object','infusion_complete': 'object','infusion_rate_adjustment': 'object','infusion_rate_unit': 'object','new_iv_bag_hung': 'object','product_description_other': 'object','reason_for_no_barcode': 'object','restart_interval': 'object','route': 'object','side': 'object','site': 'object','continued_infusion_in_other_location': 'object','infusion_rate': 'object','non_formulary_visual_verification': 'object','prior_infusion_rate': 'object','product_amount_given': 'object', 'infusion_rate_adjustment_amount': 'object'})
-    df_hcpcsevents = dd.read_csv(core_mimiciv_path + 'hosp/hcpcsevents.csv.gz', assume_missing=True, dtype={'hcpcs_cd': 'object'})
+    df_d_labitems = dd.read_csv(core_mimiciv_path + 'hosp/d_labitems.csv', assume_missing=True, dtype={'loinc_code': 'object'})
+    df_d_icd_procedures = dd.read_csv(core_mimiciv_path + 'hosp/d_icd_procedures.csv', assume_missing=True, dtype={'icd_code': 'object', 'icd_version': 'object'})
+    df_d_icd_diagnoses = dd.read_csv(core_mimiciv_path + 'hosp/d_icd_diagnoses.csv', assume_missing=True, dtype={'icd_code': 'object', 'icd_version': 'object'})
+    df_d_hcpcs = dd.read_csv(core_mimiciv_path + 'hosp/d_hcpcs.csv', assume_missing=True, dtype={'category': 'object'})
+    df_diagnoses_icd = dd.read_csv(core_mimiciv_path + 'hosp/diagnoses_icd.csv', assume_missing=True, dtype={'icd_code': 'object', 'icd_version': 'object'})
+    df_drgcodes = dd.read_csv(core_mimiciv_path + 'hosp/drgcodes.csv', assume_missing=True)
+    df_emar = dd.read_csv(core_mimiciv_path + 'hosp/emar.csv', assume_missing=True)
+    df_emar_detail = dd.read_csv(core_mimiciv_path + 'hosp/emar_detail.csv', assume_missing=True, low_memory=False, dtype={'completion_interval': 'object','dose_due': 'object','dose_given': 'object','infusion_complete': 'object','infusion_rate_adjustment': 'object','infusion_rate_unit': 'object','new_iv_bag_hung': 'object','product_description_other': 'object','reason_for_no_barcode': 'object','restart_interval': 'object','route': 'object','side': 'object','site': 'object','continued_infusion_in_other_location': 'object','infusion_rate': 'object','non_formulary_visual_verification': 'object','prior_infusion_rate': 'object','product_amount_given': 'object', 'infusion_rate_adjustment_amount': 'object'})
+    df_hcpcsevents = dd.read_csv(core_mimiciv_path + 'hosp/hcpcsevents.csv', assume_missing=True, dtype={'hcpcs_cd': 'object'})
     df_labevents = dd.read_csv(core_mimiciv_path + 'hosp/labevents.csv', assume_missing=True, dtype={'storetime': 'object', 'value': 'object', 'valueuom': 'object', 'flag': 'object', 'priority': 'object', 'comments': 'object'})
-    df_microbiologyevents = dd.read_csv(core_mimiciv_path + 'hosp/microbiologyevents.csv.gz', assume_missing=True, dtype={'comments': 'object', 'quantity': 'object'})
+    df_microbiologyevents = dd.read_csv(core_mimiciv_path + 'hosp/microbiologyevents.csv', assume_missing=True, dtype={'comments': 'object', 'quantity': 'object'})
     df_poe = dd.read_csv(core_mimiciv_path + 'hosp/poe.csv', assume_missing=True, dtype={'discontinue_of_poe_id': 'object','discontinued_by_poe_id': 'object','order_status': 'object'})
     df_poe_detail = dd.read_csv(core_mimiciv_path + 'hosp/poe_detail.csv', assume_missing=True)
     df_prescriptions = dd.read_csv(core_mimiciv_path + 'hosp/prescriptions.csv', assume_missing=True, dtype={'form_rx': 'object','gsn': 'object'})
@@ -1824,49 +1805,45 @@ def load_mimiciv(core_mimiciv_path, core_mimiciv_imgcxr_path, output_path):
     df_services = dd.read_csv(core_mimiciv_path + 'hosp/services.csv', assume_missing=True, dtype={'prev_service': 'object'})
   
     ## ICU
-    print('Loading ICU tables...')
-    df_d_items = dd.read_csv(core_mimiciv_path + 'icu/d_items.csv.gz', assume_missing=True)
-    df_procedureevents = dd.read_csv(core_mimiciv_path + 'icu/procedureevents.csv.gz', assume_missing=True, dtype={'value': 'object', 'secondaryordercategoryname': 'object', 'totalamountuom': 'object'})
-    df_outputevents = dd.read_csv(core_mimiciv_path + 'icu/outputevents.csv.gz', assume_missing=True, dtype={'value': 'object'})
+    df_d_items = dd.read_csv(core_mimiciv_path + 'icu/d_items.csv', assume_missing=True)
+    df_procedureevents = dd.read_csv(core_mimiciv_path + 'icu/procedureevents.csv', assume_missing=True, dtype={'value': 'object', 'secondaryordercategoryname': 'object', 'totalamountuom': 'object'})
+    df_outputevents = dd.read_csv(core_mimiciv_path + 'icu/outputevents.csv', assume_missing=True, dtype={'value': 'object'})
     df_inputevents = dd.read_csv(core_mimiciv_path + 'icu/inputevents.csv', assume_missing=True, dtype={'value': 'object', 'secondaryordercategoryname': 'object', 'totalamountuom': 'object'})
-    df_icustays = dd.read_csv(core_mimiciv_path + 'icu/icustays.csv.gz', assume_missing=True)
+    df_icustays = dd.read_csv(core_mimiciv_path + 'icu/icustays.csv', assume_missing=True)
     df_datetimeevents = dd.read_csv(core_mimiciv_path + 'icu/datetimeevents.csv', assume_missing=True, dtype={'value': 'object'})
-    df_chartevents = dd.read_csv("/data/wolf6245/data/physionet.org/files/mimiciv/3.0/icu/chartevents.csv.gz", assume_missing=True, low_memory=False, dtype={'value': 'object', 'valueuom': 'object'})
+    df_chartevents = dd.read_csv(core_mimiciv_path + 'icu/chartevents.csv', assume_missing=True, low_memory=False, dtype={'value': 'object', 'valueuom': 'object'})
   
     ## CXR
-    print('Loading CXR tables...')
-    df_mimic_cxr_split = dd.read_csv(core_mimiciv_imgcxr_path + 'cxr_jpg/split.csv.gz', assume_missing=True)
-    df_mimic_cxr_chexpert = dd.read_csv(core_mimiciv_imgcxr_path + 'cxr_jpg/chexpert.csv.gz', assume_missing=True)
+    df_mimic_cxr_split = dd.read_csv(core_mimiciv_path + 'mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-split.csv', assume_missing=True)
+    df_mimic_cxr_chexpert = dd.read_csv(core_mimiciv_path + 'mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-chexpert.csv', assume_missing=True)
     try:
-        df_mimic_cxr_metadata = dd.read_csv(core_mimiciv_imgcxr_path + 'cxr_jpg/metadata.csv.gz', assume_missing=True, dtype={'dicom_id': 'object'}, blocksize=None)
+        df_mimic_cxr_metadata = dd.read_csv(core_mimiciv_path + 'mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-metadata.csv', assume_missing=True, dtype={'dicom_id': 'object'}, blocksize=None)
     except:
-        df_mimic_cxr_metadata = pd.read_csv(core_mimiciv_imgcxr_path + 'cxr_jpg/metadata.csv.gz', dtype={'dicom_id': 'object'})
+        df_mimic_cxr_metadata = pd.read_csv(core_mimiciv_path + 'mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-metadata.csv', dtype={'dicom_id': 'object'})
         df_mimic_cxr_metadata = dd.from_pandas(df_mimic_cxr_metadata, npartitions=7)
-    df_mimic_cxr_negbio = dd.read_csv(core_mimiciv_imgcxr_path + 'cxr_jpg/negbio.csv.gz', assume_missing=True)
+    df_mimic_cxr_negbio = dd.read_csv(core_mimiciv_path + 'mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-negbio.csv', assume_missing=True)
   
     ## NOTES
-    # df_noteevents = dd.from_pandas(pd.read_csv(core_mimiciv_path + 'note/noteevents.csv', dtype={'charttime': 'object', 'storetime': 'object', 'text': 'object'}), chunksize=8)
-    # df_dsnotes = dd.from_pandas(pd.read_csv(core_mimiciv_path + 'note/ds_icustay.csv', dtype={'charttime': 'object', 'storetime': 'object', 'text': 'object'}), chunksize=8)
-    # df_ecgnotes = dd.from_pandas(pd.read_csv(core_mimiciv_path + 'note/ecg_icustay.csv', dtype={'charttime': 'object', 'storetime': 'object', 'text': 'object'}), chunksize=8)
-    # df_echonotes = dd.from_pandas(pd.read_csv(core_mimiciv_path + 'note/echo_icustay.csv', dtype={'charttime': 'object', 'storetime': 'object', 'text': 'object'}), chunksize=8)
-    # df_radnotes = dd.from_pandas(pd.read_csv(core_mimiciv_path + 'note/rad_icustay.csv', dtype={'charttime': 'object', 'storetime': 'object', 'text': 'object'}), chunksize=8)
+    df_noteevents = dd.from_pandas(pd.read_csv(core_mimiciv_path + 'note/noteevents.csv', dtype={'charttime': 'object', 'storetime': 'object', 'text': 'object'}), chunksize=8)
+    df_dsnotes = dd.from_pandas(pd.read_csv(core_mimiciv_path + 'note/ds_icustay.csv', dtype={'charttime': 'object', 'storetime': 'object', 'text': 'object'}), chunksize=8)
+    df_ecgnotes = dd.from_pandas(pd.read_csv(core_mimiciv_path + 'note/ecg_icustay.csv', dtype={'charttime': 'object', 'storetime': 'object', 'text': 'object'}), chunksize=8)
+    df_echonotes = dd.from_pandas(pd.read_csv(core_mimiciv_path + 'note/echo_icustay.csv', dtype={'charttime': 'object', 'storetime': 'object', 'text': 'object'}), chunksize=8)
+    df_radnotes = dd.from_pandas(pd.read_csv(core_mimiciv_path + 'note/rad_icustay.csv', dtype={'charttime': 'object', 'storetime': 'object', 'text': 'object'}), chunksize=8)
     
     
     ### -> Data Preparation (Create full database in dask format)
     ### Fix data type issues to allow for merging
     ## CORE
-    print("Preparing core")
     df_admissions['admittime'] = dd.to_datetime(df_admissions['admittime'])
     df_admissions['dischtime'] = dd.to_datetime(df_admissions['dischtime'])
     df_admissions['deathtime'] = dd.to_datetime(df_admissions['deathtime'])
     df_admissions['edregtime'] = dd.to_datetime(df_admissions['edregtime'])
     df_admissions['edouttime'] = dd.to_datetime(df_admissions['edouttime'])
-
+    
     df_transfers['intime'] = dd.to_datetime(df_transfers['intime'])
     df_transfers['outtime'] = dd.to_datetime(df_transfers['outtime'])
     
     ## HOSP
-    print("Preparing hospital")
     df_diagnoses_icd.icd_code = df_diagnoses_icd.icd_code.str.strip()
     df_diagnoses_icd.icd_version = df_diagnoses_icd.icd_version.str.strip()
     df_d_icd_diagnoses.icd_code = df_d_icd_diagnoses.icd_code.str.strip()
@@ -1899,11 +1876,10 @@ def load_mimiciv(core_mimiciv_path, core_mimiciv_imgcxr_path, output_path):
     df_services['transfertime'] = dd.to_datetime(df_services['transfertime'])
     
     ## ICU
-    print("Preparing ICU")
     df_procedureevents['starttime'] = dd.to_datetime(df_procedureevents['starttime'])
     df_procedureevents['endtime'] = dd.to_datetime(df_procedureevents['endtime'])
     df_procedureevents['storetime'] = dd.to_datetime(df_procedureevents['storetime'])
-    # df_procedureevents['comments_date'] = dd.to_datetime(df_procedureevents['comments_date'])
+    df_procedureevents['comments_date'] = dd.to_datetime(df_procedureevents['comments_date'])
     
     df_outputevents['charttime'] = dd.to_datetime(df_outputevents['charttime'])
     df_outputevents['storetime'] = dd.to_datetime(df_outputevents['storetime'])
@@ -1931,34 +1907,34 @@ def load_mimiciv(core_mimiciv_path, core_mimiciv_imgcxr_path, output_path):
         df_cxr['StudyTimeForm'] = pd.to_datetime(df_cxr['StudyTimeForm'], format='%H%M%S.%f').dt.time
         df_cxr['cxrtime'] = df_cxr.apply(lambda r : dt.datetime.combine(r['StudyDateForm'],r['StudyTimeForm']),1)
         # Add paths and info to images in cxr
-        # df_mimic_cxr_jpg = pd.read_csv(core_mimiciv_path + 'mimic-cxr-2.0.0-jpeg-txt.csv')
-        # df_cxr = pd.merge(df_mimic_cxr_jpg, df_cxr, on='dicom_id')
+        df_mimic_cxr_jpg =pd.read_csv(core_mimiciv_path + 'mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-jpeg-txt.csv')
+        df_cxr = pd.merge(df_mimic_cxr_jpg, df_cxr, on='dicom_id')
         # Save
-        df_cxr.to_csv(output_path + 'mimic-cxr-2.0.0-metadata.csv', index=False)
+        df_cxr.to_csv(core_mimiciv_path + 'mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-metadata.csv', index=False)
         #Read back the dataframe
         try:
-            df_mimic_cxr_metadata = dd.read_csv(output_path + 'mimic-cxr-2.0.0-metadata.csv', assume_missing=True, dtype={'dicom_id': 'object', 'Note': 'object'}, blocksize=None)
+            df_mimic_cxr_metadata = dd.read_csv(core_mimiciv_path + 'mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-metadata.csv', assume_missing=True, dtype={'dicom_id': 'object', 'Note': 'object'}, blocksize=None)
         except:
-            df_mimic_cxr_metadata = pd.read_csv(output_path + 'mimic-cxr-2.0.0-metadata.csv', dtype={'dicom_id': 'object', 'Note': 'object'})
+            df_mimic_cxr_metadata = pd.read_csv(core_mimiciv_path + 'mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-metadata.csv', dtype={'dicom_id': 'object', 'Note': 'object'})
             df_mimic_cxr_metadata = dd.from_pandas(df_mimic_cxr_metadata, npartitions=7)
     df_mimic_cxr_metadata['cxrtime'] = dd.to_datetime(df_mimic_cxr_metadata['cxrtime'])
     
     ## NOTES
-    # df_noteevents['chartdate'] = dd.to_datetime(df_noteevents['chartdate'])
-    # df_noteevents['charttime'] = dd.to_datetime(df_noteevents['charttime'])
-    # df_noteevents['storetime'] = dd.to_datetime(df_noteevents['storetime'])
+    df_noteevents['chartdate'] = dd.to_datetime(df_noteevents['chartdate'])
+    df_noteevents['charttime'] = dd.to_datetime(df_noteevents['charttime'])
+    df_noteevents['storetime'] = dd.to_datetime(df_noteevents['storetime'])
   
-    # df_dsnotes['charttime'] = dd.to_datetime(df_dsnotes['charttime'])
-    # df_dsnotes['storetime'] = dd.to_datetime(df_dsnotes['storetime'])
+    df_dsnotes['charttime'] = dd.to_datetime(df_dsnotes['charttime'])
+    df_dsnotes['storetime'] = dd.to_datetime(df_dsnotes['storetime'])
   
-    # df_ecgnotes['charttime'] = dd.to_datetime(df_ecgnotes['charttime'])
-    # df_ecgnotes['storetime'] = dd.to_datetime(df_ecgnotes['storetime'])
+    df_ecgnotes['charttime'] = dd.to_datetime(df_ecgnotes['charttime'])
+    df_ecgnotes['storetime'] = dd.to_datetime(df_ecgnotes['storetime'])
   
-    # df_echonotes['charttime'] = dd.to_datetime(df_echonotes['charttime'])
-    # df_echonotes['storetime'] = dd.to_datetime(df_echonotes['storetime'])
+    df_echonotes['charttime'] = dd.to_datetime(df_echonotes['charttime'])
+    df_echonotes['storetime'] = dd.to_datetime(df_echonotes['storetime'])
   
-    # df_radnotes['charttime'] = dd.to_datetime(df_radnotes['charttime'])
-    # df_radnotes['storetime'] = dd.to_datetime(df_radnotes['storetime'])
+    df_radnotes['charttime'] = dd.to_datetime(df_radnotes['charttime'])
+    df_radnotes['storetime'] = dd.to_datetime(df_radnotes['storetime'])
     
     
     ### -> SORT data
@@ -2008,18 +1984,18 @@ def load_mimiciv(core_mimiciv_path, core_mimiciv_imgcxr_path, output_path):
     
     ## NOTES
     print('PROCESSING "NOTES" DB...')
-    # df_noteevents = df_noteevents.compute().sort_values(by=['subject_id','hadm_id'])
-    # df_dsnotes = df_dsnotes.compute().sort_values(by=['subject_id','hadm_id','stay_id'])
-    # df_ecgnotes = df_ecgnotes.compute().sort_values(by=['subject_id','hadm_id','stay_id'])
-    # df_echonotes = df_echonotes.compute().sort_values(by=['subject_id','hadm_id','stay_id'])
-    # df_radnotes = df_radnotes.compute().sort_values(by=['subject_id','hadm_id','stay_id'])
+    df_noteevents = df_noteevents.compute().sort_values(by=['subject_id','hadm_id'])
+    df_dsnotes = df_dsnotes.compute().sort_values(by=['subject_id','hadm_id','stay_id'])
+    df_ecgnotes = df_ecgnotes.compute().sort_values(by=['subject_id','hadm_id','stay_id'])
+    df_echonotes = df_echonotes.compute().sort_values(by=['subject_id','hadm_id','stay_id'])
+    df_radnotes = df_radnotes.compute().sort_values(by=['subject_id','hadm_id','stay_id'])
     
     # Return
-    return df_admissions, df_patients, df_transfers, df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail, df_hcpcsevents, df_labevents, df_microbiologyevents, df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services, df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitems, df_procedureevents, df_outputevents, df_inputevents, df_icustays, df_datetimeevents, df_chartevents, df_d_items, df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio#, df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes
+    return df_admissions, df_patients, f_transfers, df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail, df_hcpcsevents, df_labevents, df_microbiologyevents, df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services, df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitem, df_procedureevents, df_outputevents, df_inputevents, df_icustays, df_datetimeevents, df_chartevents, df_d_items, df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio, df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes
 
 
 # GET LIST OF ALL UNIQUE ID COMBINATIONS IN MIMIC-IV (subject_id, hadm_id, stay_id)
-def get_unique_available_HAIM_MIMICIV_records(df_procedureevents, df_outputevents, df_inputevents, df_icustays, df_datetimeevents, df_chartevents, output_path):
+def get_unique_available_HAIM_MIMICIV_records(df_procedureevents, df_outputevents, df_inputevents, df_icustays, df_datetimeevents, df_chartevents):
     # Inputs:
     #   df's -> Many dataframes with all loaded MIMIC IV tables 
     #
@@ -2041,7 +2017,7 @@ def get_unique_available_HAIM_MIMICIV_records(df_procedureevents, df_outputevent
     df_haim_ids = df_ids[df_ids['subject_id'].isin(df_cxr_ids['subject_id'].unique())] 
     
     # Save Unique Subject/HospAdmission/Stay Combinations with Chest Xrays    
-    df_haim_ids.to_csv(output_path + 'haim_mimiciv_key_ids.csv', index=False)
+    df_haim_ids.to_csv(core_mimiciv_path + 'haim_mimiciv_key_ids.csv', index=False)
     
     print('Unique Subjects: ' + str(len(df_patients['subject_id'].unique())))
     print('Unique Subjects/Hospital Admissions/Stays Combinations: ' + str(len(df_ids)))
@@ -2061,23 +2037,12 @@ def save_unique_available_HAIM_MIMICIV_records (df_haim_ids, core_mimiciv_path):
     #   Saved dataframe in location
     
     # Save Unique Subject/HospAdmission/Stay Combinations with Chest Xrays    
-    df_haim_ids.to_csv(output_path + 'haim_mimiciv_key_ids.csv', index=False)
+    df_haim_ids.to_csv(core_mimiciv_path + 'haim_mimiciv_key_ids.csv', index=False)
     return print('Saved')
 
 
 # EXTRACT ALL INFO OF A SINGLE PATIENT FROM MIMIC-IV DATASET USING HAIM ID
-def extract_single_patient_records_mimiciv(haim_patient_idx, df_haim_ids, start_hr, end_hr,
-                        df_base_core, df_admissions, df_patients, df_transfers,
-                        df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail,
-                        df_hcpcsevents, df_labevents, df_microbiologyevents, 
-                        df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services,
-                        df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitems,
-                        df_procedureevents, df_outputevents, df_inputevents, df_icustays,
-                        df_datetimeevents, df_chartevents, df_d_items,
-                        df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes):
-
+def extract_single_patient_records_mimiciv(haim_patient_idx, df_haim_ids, start_hr, end_hr):
     # Inputs:
     #   haim_patient_idx -> Ordered number of HAIM patient
     #   df_haim_ids -> Dataframe with all unique available HAIM_MIMICIV records by key identifiers
@@ -2097,18 +2062,7 @@ def extract_single_patient_records_mimiciv(haim_patient_idx, df_haim_ids, start_
     key_stay_id = df_haim_ids.iloc[haim_patient_idx].stay_id
     start_hr = start_hr # Select timestamps
     end_hr = end_hr   # Select timestamps
-    patient = get_patient_icustay(key_subject_id, key_hadm_id, key_stay_id,
-                        df_base_core, df_admissions, df_patients, df_transfers,
-                        df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail,
-                        df_hcpcsevents, df_labevents, df_microbiologyevents, 
-                        df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services,
-                        df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitems,
-                        df_procedureevents, df_outputevents, df_inputevents, df_icustays,
-                        df_datetimeevents, df_chartevents, df_d_items,
-                        df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes)
-
+    patient = get_patient_icustay(key_subject_id, key_hadm_id, key_stay_id)
     dt_patient = get_timebound_patient_icustay(patient, start_hr , end_hr)
     
     return key_subject_id, key_hadm_id, key_stay_id, patient, dt_patient
@@ -2122,18 +2076,7 @@ def get_demographics(dt_patient):
 
 
 # GENERATE ALL SINGLE PATIENT ICU STAY RECORDS FOR ENTIRE MIMIC-IV DATABASE
-def generate_all_mimiciv_patient_object(df_haim_ids, output_path,
-                        df_base_core, df_admissions, df_patients, df_transfers,
-                        df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail,
-                        df_hcpcsevents, df_labevents, df_microbiologyevents, 
-                        df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services,
-                        df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitems,
-                        df_procedureevents, df_outputevents, df_inputevents, df_icustays,
-                        df_datetimeevents, df_chartevents, df_d_items,
-                        df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes):
-
+def generate_all_mimiciv_patient_object(df_haim_ids, core_mimiciv_path):
     # Inputs:
     #   df_haim_ids -> Dataframe with all unique available HAIM_MIMICIV records by key identifiers
     #   core_mimiciv_path -> Path to structured MIMIC IV databases in CSV files
@@ -2149,22 +2092,11 @@ def generate_all_mimiciv_patient_object(df_haim_ids, output_path,
             # Let's select each single patient and extract patient object
             start_hr = None # Select timestamps
             end_hr = None   # Select timestamps
-            key_subject_id, key_hadm_id, key_stay_id, patient, dt_patient = extract_single_patient_records_mimiciv(haim_patient_idx, df_haim_ids, start_hr, end_hr,
-                        df_base_core, df_admissions, df_patients, df_transfers,
-                        df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail,
-                        df_hcpcsevents, df_labevents, df_microbiologyevents, 
-                        df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services,
-                        df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitems,
-                        df_procedureevents, df_outputevents, df_inputevents, df_icustays,
-                        df_datetimeevents, df_chartevents, df_d_items,
-                        df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes)
-
+            key_subject_id, key_hadm_id, key_stay_id, patient, dt_patient = extract_single_patient_records_mimiciv(haim_patient_idx, df_haim_ids, start_hr, end_hr)
             
             # Save
             filename = f"{haim_patient_idx:08d}" + '.pkl'
-            save_patient_object(dt_patient, output_path + 'pickle/' + filename)
+            save_patient_object(dt_patient, core_mimiciv_path + 'pickle/' + filename)
             # Update process bar
             pbar.update(1)
     return nfiles

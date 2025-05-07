@@ -25,7 +25,9 @@
 # # This files describes how we generate the patient-admission-stay level pickle files. 
 
 #HAIM
+import os
 from MIMIC_IV_HAIM_API import *
+from tqdm import tqdm
 
 # Display optiona
 from IPython.display import Image # IPython display
@@ -33,27 +35,33 @@ pd.set_option('display.max_rows', None, 'display.max_columns', None)
 pd.set_option('display.max_colwidth', None)
 pd.set_option('float_format', '{:f}'.format)
 pd.options.mode.chained_assignment = None  # default='warn'
-get_ipython().run_line_magic('matplotlib', 'inline')
+# get_ipython().run_line_magic('matplotlib', 'inline')
+
+filter_subject_id_file = "/data/wolf6245/src/mm_study/data/f_modelling/03_model_input/data-2024-12-19-01-23-23/(3) Chronic ischaemic heart disease/y_fusion_label_not_gt.parquet"
 
 
 # ### -> Initializations & Data Loading
 # Resources to identify tables and variables of interest can be found in the MIMIC-IV official API (https://mimic-iv.mit.edu/docs/)
 
 # Define MIMIC IV Data Location
-core_mimiciv_path = 'data/HAIM/physionet/files/mimiciv/1.0/'
+core_mimiciv_path = '/data/wolf6245/src/mm_study/data/a_raw/MIMIC/MIMIC-IV/'
+core_mimiciv_imgcxr_path = '/data/wolf6245/src/mm_study/data/a_raw/MIMIC/MIMIC-CXR-JPG/'
+output_path = 'data/haim_mimiciv/'
+os.makedirs(output_path, exist_ok=True)
 
-# Define MIMIC IV Image Data Location (usually external drive)
-core_mimiciv_imgcxr_path = 'data/HAIM/physionet/files/mimiciv/1.0/mimic-cxr-jpg/2.0.0/'
-
-df_admissions, df_patients, f_transfers, df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail, df_hcpcsevents, df_labevents, df_microbiologyevents, df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services, df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitem, df_procedureevents, df_outputevents, df_inputevents, df_icustays, df_datetimeevents, df_chartevents, df_d_items, df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio, df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes = load_mimiciv(core_mimiciv_path)
+print("--------Loading MIMIC-IV Data--------")
+# df_admissions, df_patients, df_transfers, df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail, df_hcpcsevents, df_labevents, df_microbiologyevents, df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services, df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitems, df_procedureevents, df_outputevents, df_inputevents, df_icustays, df_datetimeevents, df_chartevents, df_d_items, df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio, df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes = load_mimiciv(core_mimiciv_path, core_mimiciv_imgcxr_path, output_path)
+df_admissions, df_patients, df_transfers, df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail, df_hcpcsevents, df_labevents, df_microbiologyevents, df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services, df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitems, df_procedureevents, df_outputevents, df_inputevents, df_icustays, df_datetimeevents, df_chartevents, df_d_items, df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio = load_mimiciv(core_mimiciv_path, core_mimiciv_imgcxr_path, output_path)
 
 # -> MASTER DICTIONARY of health items
 # Generate dictionary for chartevents, labevents and HCPCS
+print("--------Loading MIMIC-IV Dictionary--------")
 df_patientevents_categorylabels_dict = pd.DataFrame(columns = ['eventtype', 'category', 'label'])
 
 # Get Chartevent items with labels & category
+print("--------Getting Chartevent items--------")
 df = df_d_items
-for category_idx, category in enumerate(sorted((df.category.astype(str).unique()))):
+for category_idx, category in tqdm(enumerate(sorted((df.category.astype(str).unique())))):
 	#print(category)
 	category_list = df[df['category']==category]
 	for item_idx, item in enumerate(sorted(category_list.label.astype(str).unique())):
@@ -61,15 +69,16 @@ for category_idx, category in enumerate(sorted((df.category.astype(str).unique()
 		
 # Get Lab items with labels & category
 df = df_d_labitems
-for category_idx, category in enumerate(sorted((df.category.astype(str).unique()))):
+for category_idx, category in tqdm(enumerate(sorted((df.category.astype(str).unique())))):
 	#print(category)
 	category_list = df[df['category']==category]
 	for item_idx, item in enumerate(sorted(category_list.label.astype(str).unique())):
 		df_patientevents_categorylabels_dict = df_patientevents_categorylabels_dict.append({'eventtype': 'lab', 'category': category, 'label': item}, ignore_index=True)
 		
 # Get HCPCS items with labels & category
+print("--------Getting HCPCS items--------")
 df = df_d_hcpcs
-for category_idx, category in enumerate(sorted((df.category.astype(str).unique()))):
+for category_idx, category in tqdm(enumerate(sorted((df.category.astype(str).unique())))):
 	#print(category)
 	category_list = df[df['category']==category]
 	for item_idx, item in enumerate(sorted(category_list.long_description.astype(str).unique())):
@@ -234,34 +243,38 @@ print(df_mimic_cxr_negbio.dtypes)
 print('\n\n')
 
 
-## NOTES
-print('- NOTES > df_noteevents')
-print('--------------------------------')
-print(df_noteevents.dtypes)
-print('\n\n')
+# ## NOTES
+# print('- NOTES > df_noteevents')
+# print('--------------------------------')
+# print(df_noteevents.dtypes)
+# print('\n\n')
 
-print('- NOTES > df_icunotes')
-print('--------------------------------')
-print(df_dsnotes.dtypes)
-print('\n\n')
+# print('- NOTES > df_icunotes')
+# print('--------------------------------')
+# print(df_dsnotes.dtypes)
+# print('\n\n')
 
-print('- NOTES > df_ecgnotes')
-print('--------------------------------')
-print(df_ecgnotes.dtypes)
-print('\n\n')
+# print('- NOTES > df_ecgnotes')
+# print('--------------------------------')
+# print(df_ecgnotes.dtypes)
+# print('\n\n')
 
-print('- NOTES > df_echonotes')
-print('--------------------------------')
-print(df_echonotes.dtypes)
-print('\n\n')
+# print('- NOTES > df_echonotes')
+# print('--------------------------------')
+# print(df_echonotes.dtypes)
+# print('\n\n')
 
-print('- NOTES > df_radnotes')
-print('--------------------------------')
-print(df_radnotes.dtypes)
-print('\n\n')
+# print('- NOTES > df_radnotes')
+# print('--------------------------------')
+# print(df_radnotes.dtypes)
+# print('\n\n')
 
 
 # ## -> GET LIST OF ALL UNIQUE ID COMBINATIONS IN MIMIC-IV (subject_id, hadm_id, stay_id)
+df_base_core = df_admissions.merge(df_patients, how='left').merge(df_transfers, how='left')
+os.makedirs(output_path + 'core/', exist_ok=True)
+df_base_core.to_csv(output_path + 'core/core.csv')
+
 
 # Get Unique Subject/HospAdmission/Stay Combinations
 df_ids = pd.concat([pd.DataFrame(), df_procedureevents[['subject_id','hadm_id','stay_id']]], sort=False).drop_duplicates()
@@ -277,8 +290,17 @@ df_cxr_ids = pd.concat([pd.DataFrame(), df_mimic_cxr_chexpert[['subject_id']]], 
 # Get Unique Subject/HospAdmission/Stay Combinations with Chest Xrays
 df_haim_ids = df_ids[df_ids['subject_id'].isin(df_cxr_ids['subject_id'].unique())] 
 
+
+# Check for fusion subject_ids
+filter_df = pd.read_parquet(filter_subject_id_file)
+subject_ids_to_use = filter_df.subject_id.unique()
+old_stays_len = df_haim_ids.shape[0]
+df_haim_ids = df_haim_ids[df_haim_ids['subject_id'].isin(subject_ids_to_use)] 
+print(f"Filtered {old_stays_len - df_haim_ids.shape[0]} stays from {old_stays_len} to {df_haim_ids.shape[0]} stays")
+
+
 # Save Unique Subject/HospAdmission/Stay Combinations with Chest Xrays    
-df_haim_ids.to_csv(core_mimiciv_path + 'haim_mimiciv_key_ids.csv', index=False)
+df_haim_ids.to_csv(output_path + 'haim_mimiciv_key_ids.csv', index=False)
 
 
 print('Unique Subjects: ' + str(len(df_patients['subject_id'].unique())))
@@ -287,8 +309,19 @@ print('Unique Subjects with Chest Xrays Available: ' + str(len(df_cxr_ids)))
 
 
 # Save Unique Subject/HospAdmission/Stay Combinations with Chest Xrays    
-df_haim_ids = pd.read_csv(core_mimiciv_path + 'haim_mimiciv_key_ids.csv')
+df_haim_ids = pd.read_csv(output_path + 'haim_mimiciv_key_ids.csv')
 print('Unique HAIM Records Available: ' + str(len(df_haim_ids)))
 
 # GENERATE ALL SINGLE PATIENT ICU STAY RECORDS FOR ENTIRE MIMIC-IV DATABASE
-nfiles = generate_all_mimiciv_patient_object(df_haim_ids, core_mimiciv_path)
+print(df_haim_ids.head(5))
+nfiles = generate_all_mimiciv_patient_object(df_haim_ids, output_path,
+                        df_base_core, df_admissions, df_patients, df_transfers,
+                        df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail,
+                        df_hcpcsevents, df_labevents, df_microbiologyevents, 
+                        df_poe, df_poe_detail, df_prescriptions, df_procedures_icd, df_services,
+                        df_d_icd_diagnoses, df_d_icd_procedures, df_d_hcpcs, df_d_labitems,
+                        df_procedureevents, df_outputevents, df_inputevents, df_icustays,
+                        df_datetimeevents, df_chartevents, df_d_items,
+                        df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
+                        core_mimiciv_imgcxr_path,
+                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes)
