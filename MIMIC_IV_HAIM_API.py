@@ -210,8 +210,7 @@ def get_patient_icustay(key_subject_id, key_hadm_id, key_stay_id,
                         df_procedureevents, df_outputevents, df_inputevents, df_icustays,
                         df_datetimeevents, df_chartevents, df_d_items,
                         df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes):
+                        core_mimiciv_imgcxr_path):
 
     # Inputs:
     #   key_subject_id -> subject_id is unique to a patient
@@ -282,17 +281,17 @@ def get_patient_icustay(key_subject_id, key_hadm_id, key_stay_id,
     ###-> Get images of that timebound patient
     f_df_imcxr = []
     for img_idx, img_row in f_df_cxr.iterrows():
-        img_path = core_mimiciv_imgcxr_path + str(img_row['Img_Folder']) + '/' + str(img_row['Img_Filename'])
+        img_path = core_mimiciv_imgcxr_path + str(img_row['file_path'])
         img_cxr_shape = [224, 224]
         img_cxr = cv2.resize(cv2.imread(img_path, cv2.IMREAD_GRAYSCALE), (img_cxr_shape[0], img_cxr_shape[1]))
         f_df_imcxr.append(np.array(img_cxr))
       
     ##-> NOTES
-    f_df_noteevents = df_noteevents[(df_noteevents.subject_id == key_subject_id) & (df_noteevents.hadm_id == key_hadm_id)]
-    f_df_dsnotes = df_dsnotes[(df_dsnotes.subject_id == key_subject_id) & (df_dsnotes.hadm_id == key_hadm_id) & (df_dsnotes.stay_id == key_stay_id)]
-    f_df_ecgnotes = df_ecgnotes[(df_ecgnotes.subject_id == key_subject_id) & (df_ecgnotes.hadm_id == key_hadm_id) & (df_ecgnotes.stay_id == key_stay_id)]
-    f_df_echonotes = df_echonotes[(df_echonotes.subject_id == key_subject_id) & (df_echonotes.hadm_id == key_hadm_id) & (df_echonotes.stay_id == key_stay_id)]
-    f_df_radnotes = df_radnotes[(df_radnotes.subject_id == key_subject_id) & (df_radnotes.hadm_id == key_hadm_id) & (df_radnotes.stay_id == key_stay_id)]
+    # f_df_noteevents = df_noteevents[(df_noteevents.subject_id == key_subject_id) & (df_noteevents.hadm_id == key_hadm_id)]
+    # f_df_dsnotes = df_dsnotes[(df_dsnotes.subject_id == key_subject_id) & (df_dsnotes.hadm_id == key_hadm_id) & (df_dsnotes.stay_id == key_stay_id)]
+    # f_df_ecgnotes = df_ecgnotes[(df_ecgnotes.subject_id == key_subject_id) & (df_ecgnotes.hadm_id == key_hadm_id) & (df_ecgnotes.stay_id == key_stay_id)]
+    # f_df_echonotes = df_echonotes[(df_echonotes.subject_id == key_subject_id) & (df_echonotes.hadm_id == key_hadm_id) & (df_echonotes.stay_id == key_stay_id)]
+    # f_df_radnotes = df_radnotes[(df_radnotes.subject_id == key_subject_id) & (df_radnotes.hadm_id == key_hadm_id) & (df_radnotes.stay_id == key_stay_id)]
 
     ###-> Merge data into single patient structure
     #--None
@@ -332,11 +331,16 @@ def get_patient_icustay(key_subject_id, key_hadm_id, key_stay_id,
     imcxr = f_df_imcxr
 
     ## NOTES
-    noteevents = f_df_noteevents
-    dsnotes = f_df_dsnotes
-    ecgnotes = f_df_ecgnotes
-    echonotes = f_df_echonotes
-    radnotes = f_df_radnotes
+    # noteevents = f_df_noteevents
+    # dsnotes = f_df_dsnotes
+    # ecgnotes = f_df_ecgnotes
+    # echonotes = f_df_echonotes
+    # radnotes = f_df_radnotes
+    noteevents = None
+    dsnotes = None
+    ecgnotes = None
+    echonotes = None
+    radnotes = None
 
 
     # Create patient object and return
@@ -406,11 +410,11 @@ def get_timebound_patient_icustay(Patient_ICUstay, start_hr = None, end_hr = Non
     Patient_ICUstay.outputevents['deltacharttime'] = Patient_ICUstay.outputevents.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
     Patient_ICUstay.datetimeevents['deltacharttime'] = Patient_ICUstay.datetimeevents.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
     Patient_ICUstay.chartevents['deltacharttime'] = Patient_ICUstay.chartevents.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
-    Patient_ICUstay.noteevents['deltacharttime'] = Patient_ICUstay.noteevents.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
-    Patient_ICUstay.dsnotes['deltacharttime'] = Patient_ICUstay.dsnotes.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
-    Patient_ICUstay.ecgnotes['deltacharttime'] = Patient_ICUstay.ecgnotes.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
-    Patient_ICUstay.echonotes['deltacharttime'] = Patient_ICUstay.echonotes.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
-    Patient_ICUstay.radnotes['deltacharttime'] = Patient_ICUstay.radnotes.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
+    # Patient_ICUstay.noteevents['deltacharttime'] = Patient_ICUstay.noteevents.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
+    # Patient_ICUstay.dsnotes['deltacharttime'] = Patient_ICUstay.dsnotes.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
+    # Patient_ICUstay.ecgnotes['deltacharttime'] = Patient_ICUstay.ecgnotes.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
+    # Patient_ICUstay.echonotes['deltacharttime'] = Patient_ICUstay.echonotes.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
+    # Patient_ICUstay.radnotes['deltacharttime'] = Patient_ICUstay.radnotes.apply(lambda x: date_diff_hrs(x['charttime'],admittime) if not x.empty else None, axis=1)
     
     # Re-calculate times of CXR database
     Patient_ICUstay.cxr['StudyDateForm'] = pd.to_datetime(Patient_ICUstay.cxr['StudyDate'], format='%Y%m%d')
@@ -431,11 +435,11 @@ def get_timebound_patient_icustay(Patient_ICUstay, start_hr = None, end_hr = Non
         Patient_ICUstay.cxr = Patient_ICUstay.cxr[(Patient_ICUstay.cxr.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.cxr.deltacharttime)]
         Patient_ICUstay.imcxr = [Patient_ICUstay.imcxr[i] for i, x in enumerate((Patient_ICUstay.cxr.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.cxr.deltacharttime)) if x]
         #Notes
-        Patient_ICUstay.noteevents = Patient_ICUstay.noteevents[(Patient_ICUstay.noteevents.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.noteevents.deltacharttime)]
-        Patient_ICUstay.dsnotes = Patient_ICUstay.dsnotes[(Patient_ICUstay.dsnotes.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.dsnotes.deltacharttime)]
-        Patient_ICUstay.ecgnotes = Patient_ICUstay.ecgnotes[(Patient_ICUstay.ecgnotes.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.ecgnotes.deltacharttime)]
-        Patient_ICUstay.echonotes = Patient_ICUstay.echonotes[(Patient_ICUstay.echonotes.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.echonotes.deltacharttime)]
-        Patient_ICUstay.radnotes = Patient_ICUstay.radnotes[(Patient_ICUstay.radnotes.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.radnotes.deltacharttime)]
+        # Patient_ICUstay.noteevents = Patient_ICUstay.noteevents[(Patient_ICUstay.noteevents.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.noteevents.deltacharttime)]
+        # Patient_ICUstay.dsnotes = Patient_ICUstay.dsnotes[(Patient_ICUstay.dsnotes.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.dsnotes.deltacharttime)]
+        # Patient_ICUstay.ecgnotes = Patient_ICUstay.ecgnotes[(Patient_ICUstay.ecgnotes.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.ecgnotes.deltacharttime)]
+        # Patient_ICUstay.echonotes = Patient_ICUstay.echonotes[(Patient_ICUstay.echonotes.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.echonotes.deltacharttime)]
+        # Patient_ICUstay.radnotes = Patient_ICUstay.radnotes[(Patient_ICUstay.radnotes.deltacharttime >= start_hr) | pd.isnull(Patient_ICUstay.radnotes.deltacharttime)]
         
         
     if not (end_hr == None):
@@ -448,11 +452,11 @@ def get_timebound_patient_icustay(Patient_ICUstay, start_hr = None, end_hr = Non
         Patient_ICUstay.cxr = Patient_ICUstay.cxr[(Patient_ICUstay.cxr.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.cxr.deltacharttime)]
         Patient_ICUstay.imcxr = [Patient_ICUstay.imcxr[i] for i, x in enumerate((Patient_ICUstay.cxr.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.cxr.deltacharttime)) if x]
         #Notes
-        Patient_ICUstay.noteevents = Patient_ICUstay.noteevents[(Patient_ICUstay.noteevents.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.noteevents.deltacharttime)]
-        Patient_ICUstay.dsnotes = Patient_ICUstay.dsnotes[(Patient_ICUstay.dsnotes.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.dsnotes.deltacharttime)]
-        Patient_ICUstay.ecgnotes = Patient_ICUstay.ecgnotes[(Patient_ICUstay.ecgnotes.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.ecgnotes.deltacharttime)]
-        Patient_ICUstay.echonotes = Patient_ICUstay.echonotes[(Patient_ICUstay.echonotes.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.echonotes.deltacharttime)]
-        Patient_ICUstay.radnotes = Patient_ICUstay.radnotes[(Patient_ICUstay.radnotes.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.radnotes.deltacharttime)]
+        # Patient_ICUstay.noteevents = Patient_ICUstay.noteevents[(Patient_ICUstay.noteevents.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.noteevents.deltacharttime)]
+        # Patient_ICUstay.dsnotes = Patient_ICUstay.dsnotes[(Patient_ICUstay.dsnotes.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.dsnotes.deltacharttime)]
+        # Patient_ICUstay.ecgnotes = Patient_ICUstay.ecgnotes[(Patient_ICUstay.ecgnotes.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.ecgnotes.deltacharttime)]
+        # Patient_ICUstay.echonotes = Patient_ICUstay.echonotes[(Patient_ICUstay.echonotes.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.echonotes.deltacharttime)]
+        # Patient_ICUstay.radnotes = Patient_ICUstay.radnotes[(Patient_ICUstay.radnotes.deltacharttime <= end_hr) | pd.isnull(Patient_ICUstay.radnotes.deltacharttime)]
         
         # Filter CXR to match allowable patient stay
         Patient_ICUstay.cxr = Patient_ICUstay.cxr[(Patient_ICUstay.cxr.charttime <= dischtime)]
@@ -1609,54 +1613,54 @@ def get_chest_xray_embeddings(dt_patient, verbose=0):
 
     # Iterate
     nImgs = len(imgs)
-    with tqdm(total = nImgs) as pbar:
-        for idx, img in enumerate(imgs):
-            #img = skimage.io.imread(img_path) # If importing from path use this
-            img = xrv.datasets.normalize(img, 255)
-          
-            # For each image check if they are 2D arrays
-            if len(img.shape) > 2:
-                img = img[:, :, 0]
-            if len(img.shape) < 2:
-                print("Error: Dimension lower than 2 for image!")
+    # with tqdm(total = nImgs) as pbar:
+    for idx, img in enumerate(imgs):
+        #img = skimage.io.imread(img_path) # If importing from path use this
+        img = xrv.datasets.normalize(img, 255)
+        
+        # For each image check if they are 2D arrays
+        if len(img.shape) > 2:
+            img = img[:, :, 0]
+        if len(img.shape) < 2:
+            print("Error: Dimension lower than 2 for image!")
 
-            # Add color channel for prediction
-            #Resize using OpenCV
-            img = cv2.resize(img, (224, 224), interpolation = cv2.INTER_AREA)   
-            img = img[None, :, :]
+        # Add color channel for prediction
+        #Resize using OpenCV
+        img = cv2.resize(img, (224, 224), interpolation = cv2.INTER_AREA)   
+        img = img[None, :, :]
+        
+        #Or resize using core resizer (thows error sometime)
+        #transform = transforms.Compose([xrv.datasets.XRayCenterCrop(),xrv.datasets.XRayResizer(224)])
+        #img = transform(img)
+        model = xrv.models.DenseNet(weights = model_weights_name)
+        # model = xrv.models.ResNet(weights="resnet50-res512-all") # ResNet is also available
+        
+        output = {}
+        with torch.no_grad():
+            img = torch.from_numpy(img).unsqueeze(0)
+            if cuda:
+                img = img.cuda()
+                model = model.cuda()
             
-            #Or resize using core resizer (thows error sometime)
-            #transform = transforms.Compose([xrv.datasets.XRayCenterCrop(),xrv.datasets.XRayResizer(224)])
-            #img = transform(img)
-            model = xrv.models.DenseNet(weights = model_weights_name)
-            # model = xrv.models.ResNet(weights="resnet50-res512-all") # ResNet is also available
+            # Extract dense features
+            feats = model.features(img)
+            feats = F.relu(feats, inplace=True)
+            feats = F.adaptive_avg_pool2d(feats, (1, 1))
+            densefeatures = feats.cpu().detach().numpy().reshape(-1)
+            densefeature_embeddings.append(densefeatures) # append to list of dense features for all images
             
-            output = {}
-            with torch.no_grad():
-                img = torch.from_numpy(img).unsqueeze(0)
-                if cuda:
-                    img = img.cuda()
-                    model = model.cuda()
-              
-                # Extract dense features
-                feats = model.features(img)
-                feats = F.relu(feats, inplace=True)
-                feats = F.adaptive_avg_pool2d(feats, (1, 1))
-                densefeatures = feats.cpu().detach().numpy().reshape(-1)
-                densefeature_embeddings.append(densefeatures) # append to list of dense features for all images
-                
-                # Extract predicted probabilities of considered 18 classes:
-                # Get by calling "xrv.datasets.default_pathologies" or "dict(zip(xrv.datasets.default_pathologies,preds[0].detach().numpy()))"
-                # ['Atelectasis','Consolidation','Infiltration','Pneumothorax','Edema','Emphysema',Fibrosis',
-                #  'Effusion','Pneumonia','Pleural_Thickening','Cardiomegaly','Nodule',Mass','Hernia',
-                #  'Lung Lesion','Fracture','Lung Opacity','Enlarged Cardiomediastinum']
-                preds = model(img).cpu()
-                predictions = preds[0].detach().numpy()
-                prediction_embeddings.append(predictions) # append to list of predictions for all images
-            
-                if verbose >=1:
-                    # Update process bar
-                    pbar.update(1)
+            # Extract predicted probabilities of considered 18 classes:
+            # Get by calling "xrv.datasets.default_pathologies" or "dict(zip(xrv.datasets.default_pathologies,preds[0].detach().numpy()))"
+            # ['Atelectasis','Consolidation','Infiltration','Pneumothorax','Edema','Emphysema',Fibrosis',
+            #  'Effusion','Pneumonia','Pleural_Thickening','Cardiomegaly','Nodule',Mass','Hernia',
+            #  'Lung Lesion','Fracture','Lung Opacity','Enlarged Cardiomediastinum']
+            preds = model(img).cpu()
+            predictions = preds[0].detach().numpy()
+            prediction_embeddings.append(predictions) # append to list of predictions for all images
+        
+            # if verbose >=1:
+            #     # Update process bar
+            #     pbar.update(1)
         
         
     # Get image weights by hours passed from current time to image
@@ -1933,6 +1937,7 @@ def load_mimiciv(core_mimiciv_path, core_mimiciv_imgcxr_path, output_path):
         # Add paths and info to images in cxr
         # df_mimic_cxr_jpg = pd.read_csv(core_mimiciv_path + 'mimic-cxr-2.0.0-jpeg-txt.csv')
         # df_cxr = pd.merge(df_mimic_cxr_jpg, df_cxr, on='dicom_id')
+        df_cxr['file_path'] = df_cxr.apply(lambda x: f'files/p{str(int(x["subject_id"]))[:2]}/p{int(x["subject_id"])}/s{int(x["study_id"])}/{x["dicom_id"]}.jpg', axis=1)
         # Save
         df_cxr.to_csv(output_path + 'mimic-cxr-2.0.0-metadata.csv', index=False)
         #Read back the dataframe
@@ -2075,8 +2080,7 @@ def extract_single_patient_records_mimiciv(haim_patient_idx, df_haim_ids, start_
                         df_procedureevents, df_outputevents, df_inputevents, df_icustays,
                         df_datetimeevents, df_chartevents, df_d_items,
                         df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes):
+                        core_mimiciv_imgcxr_path):
 
     # Inputs:
     #   haim_patient_idx -> Ordered number of HAIM patient
@@ -2106,8 +2110,7 @@ def extract_single_patient_records_mimiciv(haim_patient_idx, df_haim_ids, start_
                         df_procedureevents, df_outputevents, df_inputevents, df_icustays,
                         df_datetimeevents, df_chartevents, df_d_items,
                         df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes)
+                        core_mimiciv_imgcxr_path)
 
     dt_patient = get_timebound_patient_icustay(patient, start_hr , end_hr)
     
@@ -2131,8 +2134,7 @@ def generate_all_mimiciv_patient_object(df_haim_ids, output_path,
                         df_procedureevents, df_outputevents, df_inputevents, df_icustays,
                         df_datetimeevents, df_chartevents, df_d_items,
                         df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes):
+                        core_mimiciv_imgcxr_path):
 
     # Inputs:
     #   df_haim_ids -> Dataframe with all unique available HAIM_MIMICIV records by key identifiers
@@ -2158,12 +2160,12 @@ def generate_all_mimiciv_patient_object(df_haim_ids, output_path,
                         df_procedureevents, df_outputevents, df_inputevents, df_icustays,
                         df_datetimeevents, df_chartevents, df_d_items,
                         df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes)
+                        core_mimiciv_imgcxr_path)
 
             
             # Save
             filename = f"{haim_patient_idx:08d}" + '.pkl'
+            os.makedirs(output_path + 'pickle/', exist_ok=True)
             save_patient_object(dt_patient, output_path + 'pickle/' + filename)
             # Update process bar
             pbar.update(1)

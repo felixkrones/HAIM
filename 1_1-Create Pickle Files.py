@@ -313,7 +313,6 @@ df_haim_ids = pd.read_csv(output_path + 'haim_mimiciv_key_ids.csv')
 print('Unique HAIM Records Available: ' + str(len(df_haim_ids)))
 
 # GENERATE ALL SINGLE PATIENT ICU STAY RECORDS FOR ENTIRE MIMIC-IV DATABASE
-print(df_haim_ids.head(5))
 nfiles = generate_all_mimiciv_patient_object(df_haim_ids, output_path,
                         df_base_core, df_admissions, df_patients, df_transfers,
                         df_diagnoses_icd, df_drgcodes, df_emar, df_emar_detail,
@@ -323,5 +322,4 @@ nfiles = generate_all_mimiciv_patient_object(df_haim_ids, output_path,
                         df_procedureevents, df_outputevents, df_inputevents, df_icustays,
                         df_datetimeevents, df_chartevents, df_d_items,
                         df_mimic_cxr_split, df_mimic_cxr_chexpert, df_mimic_cxr_metadata, df_mimic_cxr_negbio,
-                        core_mimiciv_imgcxr_path,
-                        df_noteevents, df_dsnotes, df_ecgnotes, df_echonotes, df_radnotes)
+                        core_mimiciv_imgcxr_path)
