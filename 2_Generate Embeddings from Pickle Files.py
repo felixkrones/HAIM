@@ -45,12 +45,11 @@ def process_cxr_embeddings_haim_id(haim_id, dt_patient, df_init, df_imcxr, idx, 
     df_demographics_embeddings_fusion = pd.DataFrame(demo_embeddings.reshape(1,-1), columns=['de_'+str(i) for i in range(demo_embeddings.shape[0])])
     df_ts_ce_embeddings_fusion = pd.DataFrame(aggregated_ts_ce_embeddings.values.reshape(1,-1), columns=['ts_ce_'+str(i) for i in range(aggregated_ts_ce_embeddings.values.shape[0])])
     df_ts_le_embeddings_fusion = pd.DataFrame(aggregated_ts_le_embeddings.values.reshape(1,-1), columns=['ts_le_'+str(i) for i in range(aggregated_ts_le_embeddings.values.shape[0])])
-    df_ts_pe_embeddings_fusion = pd.DataFrame(aggregated_ts_pe_embeddings.values.reshape(1,-1), columns=['ts_pe_'+str(i) for i in range(aggregated_ts_pe_embeddings.values.shape[0])])
-    
     df_vision_dense_embeddings_fusion = pd.DataFrame(densefeature_embeddings.reshape(1,-1), columns=['vd_'+str(i) for i in range(densefeature_embeddings.shape[0])])
     df_vision_predictions_embeddings_fusion = pd.DataFrame(prediction_embeddings.reshape(1,-1), columns=['vp_'+str(i) for i in range(prediction_embeddings.shape[0])])
     df_vision_multi_dense_embeddings_fusion = pd.DataFrame(aggregated_densefeature_embeddings.reshape(1,-1), columns=['vmd_'+str(i) for i in range(aggregated_densefeature_embeddings.shape[0])])
     df_vision_multi_predictions_embeddings_fusion = pd.DataFrame(aggregated_prediction_embeddings.reshape(1,-1), columns=['vmp_'+str(i) for i in range(aggregated_prediction_embeddings.shape[0])])
+    df_ts_pe_embeddings_fusion = pd.DataFrame(aggregated_ts_pe_embeddings.values.reshape(1,-1), columns=['ts_pe_'+str(i) for i in range(aggregated_ts_pe_embeddings.values.shape[0])])
     # df_ecgnotes_embeddings_fusion = pd.DataFrame(aggregated_ecg_embeddings.reshape(1,-1), columns=['n_ecg_'+str(i) for i in range(aggregated_ecg_embeddings.shape[0])])
     # df_echonotes_embeddings_fusion = pd.DataFrame(aggregated_echo_embeddings.reshape(1,-1), columns=['n_ech_'+str(i) for i in range(aggregated_echo_embeddings.shape[0])])
     # df_radnotes_embeddings_fusion = pd.DataFrame(aggregated_rad_embeddings.reshape(1,-1), columns=['n_rad_'+str(i) for i in range(aggregated_rad_embeddings.shape[0])])
@@ -70,6 +69,7 @@ def process_cxr_embeddings_haim_id(haim_id, dt_patient, df_init, df_imcxr, idx, 
     df_fusion = pd.concat([df_fusion, df_ts_ce_embeddings_fusion], axis=1)
     df_fusion = pd.concat([df_fusion, df_ts_le_embeddings_fusion], axis=1)
     df_fusion = pd.concat([df_fusion, df_ts_pe_embeddings_fusion], axis=1)
+    
     # df_fusion = pd.concat([df_fusion, df_ecgnotes_embeddings_fusion], axis=1)
     # df_fusion = pd.concat([df_fusion, df_echonotes_embeddings_fusion], axis=1)
     # df_fusion = pd.concat([df_fusion, df_radnotes_embeddings_fusion], axis=1)
@@ -174,6 +174,6 @@ if __name__ == "__main__":
     # Create the output folder if it doesn't exist
     for haim_id in tqdm(haim_ids):
         file_path = pickle_folder + f"{haim_id:08d}" + '.pkl'
-        fname = 'data/haim_mimiciv/embedding/' + f"{haim_id:08d}" + '.pkl'
+        fname = 'data/haim_mimiciv/embedding/' + f"{haim_id:08d}" + '.csv'
         if not os.path.isfile(fname):
             create_embedding_file(haim_id, file_path, fname)

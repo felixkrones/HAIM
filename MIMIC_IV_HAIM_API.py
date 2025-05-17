@@ -986,8 +986,7 @@ def get_ts_embeddings(dt_patient, event_type):
         event_list = ['Glucose', 'Potassium', 'Sodium', 'Chloride', 'Creatinine',
            'Urea Nitrogen', 'Bicarbonate', 'Anion Gap', 'Hemoglobin', 'Hematocrit',
            'Magnesium', 'Platelet Count', 'Phosphate', 'White Blood Cells',
-           'Calcium, Total', 'MCH', 'Red Blood Cells', 'MCHC', 'MCV', 'RDW', 
-                      'Platelet Count', 'Neutrophils', 'Vancomycin']
+           'Calcium, Total', 'MCH', 'Red Blood Cells', 'MCHC', 'MCV', 'RDW', 'Neutrophils', 'Vancomycin']
         df_pivot = pivot_labevent(df, event_list)
         
     elif(event_type == 'chart'):
