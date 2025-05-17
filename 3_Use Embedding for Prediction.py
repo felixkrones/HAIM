@@ -228,6 +228,7 @@ if __name__ == "__main__":
         std_auc = np.std(auc_list_condition)
         print(f"Mean AUC: {mean_auc}")
         print(f"Standard deviation of AUC: {std_auc}")
+        print("---------------------------")
         
         # Save results as text file
         with open(f"{model_folder}/auc_list_{condition}.txt", "w") as f:
@@ -251,6 +252,7 @@ if __name__ == "__main__":
         overall_std_auc = np.std(all_conditions)
         f.write(f"Overall mean AUC: {overall_mean_auc}\n")
         f.write(f"Overall standard deviation of AUC: {overall_std_auc}\n")
+        print("--------------------------------------------------------------")
         print(f"Overall mean AUC: {overall_mean_auc}")
         print(f"Overall standard deviation of AUC: {overall_std_auc}")
     print("Done. Finished processing all conditions.")
